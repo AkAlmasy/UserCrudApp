@@ -10,5 +10,6 @@ namespace UserCrudApp.DataAccess
         public DbSet<User> Users { get; set; }
 
         public DbSet<Todo> Todos { get; set; }
+
     }
 }

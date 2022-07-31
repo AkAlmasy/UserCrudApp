@@ -17,7 +17,7 @@ namespace UserCrudApp.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet("getUsers")]
         public async Task<ActionResult<List<User>>> Get()
         {
             try
@@ -51,7 +51,69 @@ namespace UserCrudApp.Controllers
                 // TODO Log e somewhere
                 return BadRequest("An error occurred" +  e);
             }
+        }
 
+        [HttpPost("createUser")]
+        public async Task<ActionResult<List<User>>> AddUser(User user)
+        {
+            try
+            {
+                _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+                return Ok(await _context.Users.Include(T => T.Todos).ToListAsync());
+            }
+            catch (Exception e)
+            {
+                // TODO Log e somewhere
+                return BadRequest("An error occurred" + e);
+            }
+        }
+
+        [HttpPut("modifyUser")]
+        public async Task<ActionResult<List<User>>> UpdateUser(User user)
+        {
+            try
+            {
+                var dbUser = await _context.Users.FindAsync(user.Id);
+                if (dbUser == null)
+                {
+                    return BadRequest("User not found");
+                }
+
+                dbUser.Name = user.Name;
+                dbUser.Todos = user.Todos;
+
+                await _context.SaveChangesAsync();
+                return Ok(await _context.Users.Include(T => T.Todos).ToListAsync());
+            }
+            catch (Exception e)
+            {
+                // TODO Log e somewhere
+                return BadRequest("An error occurred" + e);
+            }
+
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult<List<User>>> Delete(int id)
+        {
+            try
+            {
+                User user = await _context.Users.Include(i => i.Todos).FirstOrDefaultAsync(i => i.Id == id);
+                if (user == null)
+                {
+                    return BadRequest("User not found");
+                }
+                _context.Users.Remove(user);
+                await _context.SaveChangesAsync();
+
+                return Ok(await _context.Users.Include(T => T.Todos).ToListAsync());
+            }
+            catch (Exception e)
+            {
+                // TODO Log e somewhere
+                return BadRequest("An error occurred" + e);
+            }
         }
     }
 }
