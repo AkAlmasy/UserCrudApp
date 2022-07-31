@@ -32,6 +32,25 @@ namespace UserCrudApp.Controllers
                 // TODO Log e somewhere
                 return BadRequest(e);
             }
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<List<User>>> Get(int id)
+        {
+            try
+            {
+                User user = await _context.Users.Include(i => i.Todos).FirstOrDefaultAsync(i => i.Id == id);
+                if (user == null)
+                {
+                    return BadRequest("User not found");
+                }
+                return Ok(user);
+            }
+            catch (Exception e)
+            {
+                // TODO Log e somewhere
+                return BadRequest("An error occurred" +  e);
+            }
 
         }
     }
