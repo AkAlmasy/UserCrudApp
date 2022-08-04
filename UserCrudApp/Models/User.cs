@@ -6,7 +6,7 @@
 
         public string Name { get; set; }
 
-        public ProfileImage ProfileImage { get; set; }
+        public string ProfileImagePath { get; set; }
 
         public List<Todo> Todos { get; set; } = new List<Todo>();
     }

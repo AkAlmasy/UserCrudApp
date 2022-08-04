@@ -82,10 +82,9 @@ namespace UserCrudApp.Controllers
 
                 dbUser.Name = user.Name;
                 dbUser.Todos = user.Todos;
-                dbUser.ProfileImage.FileName = user.ProfileImage.FileName;
-                dbUser.ProfileImage.Image = user.ProfileImage.Image;
 
                 await _context.SaveChangesAsync();
+                var temp = await _context.Users.Include(T => T.Todos).ToListAsync();
                 return Ok(await _context.Users.Include(T => T.Todos).ToListAsync());
             }
             catch (Exception e)
