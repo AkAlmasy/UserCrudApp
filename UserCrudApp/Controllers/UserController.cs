@@ -70,21 +70,49 @@ namespace UserCrudApp.Controllers
         }
 
         [HttpPut("modifyUser")]
-        public async Task<ActionResult<List<User>>> UpdateUser(User user)
+        public async Task<ActionResult<List<User>>> UpdateUser(User modifiedUser)
         {
             try
             {
-                var dbUser = await _context.Users.FindAsync(user.Id);
+                var dbUser = await _context.Users.Include(user => user.Todos).Where(user => user.Id == modifiedUser.Id).SingleOrDefaultAsync();
+
                 if (dbUser == null)
                 {
                     return BadRequest("User not found");
                 }
 
-                dbUser.Name = user.Name;
-                dbUser.Todos = user.Todos;
+                _context.Entry(dbUser).CurrentValues.SetValues(modifiedUser);
+
+                foreach (var existingChild in dbUser.Todos.ToList())
+                {
+                    if (!modifiedUser.Todos.Any(c => c.Id == existingChild.Id))
+                        _context.Todos.Remove(existingChild);
+                }
+
+                // Update and Insert children
+                foreach (var childModel in modifiedUser.Todos)
+                {
+                    var existingChild = dbUser.Todos
+                        .Where(c => c.Id == childModel.Id)
+                        .SingleOrDefault();
+
+                    if (existingChild != null)
+                        // Update child
+                        _context.Entry(existingChild).CurrentValues.SetValues(childModel);
+                    else
+                    {
+                        // Insert child
+                        var newChild = new Todo
+                        {
+                            Id = childModel.Id, 
+                            Name = childModel.Name,
+                            Description = childModel.Description,
+                        };
+                        dbUser.Todos.Add(newChild);
+                    }
+                }
 
                 await _context.SaveChangesAsync();
-                var temp = await _context.Users.Include(T => T.Todos).ToListAsync();
                 return Ok(await _context.Users.Include(T => T.Todos).ToListAsync());
             }
             catch (Exception e)
